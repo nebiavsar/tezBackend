@@ -249,15 +249,8 @@ Token iceriginde su bilgiler bulunur:
 
 Bu token `app.jwt.secret` ile imzalanir.
 
-### 6.2 Frontend bu tokeni nasil kullanmali?
 
-Frontendci arkadasina su sekilde anlatabilirsin:
-
-"Login olduktan sonra backend sana bir JWT token donduruyor. Bu token kullanicinin kimligini temsil ediyor. Bundan sonraki korumali butun isteklere `Authorization: Bearer <token>` header'i eklemen gerekiyor. Backend bu token'i okuyup kullanicinin kim oldugunu anliyor."
-
-Yani frontend tarafi her istekte kullanici id gondermez. Kullanici kimligi token'dan cikarilir. Kullanici profil bilgisi ise login response'undan veya `GET /api/auth/user` endpoint'inden alinabilir.
-
-### 6.3 Token akisi
+### 6.2 Token akisi
 
 1. Kullanici `signup` veya `login` yapar
 2. Backend `AuthResponse` doner
@@ -268,14 +261,6 @@ Yani frontend tarafi her istekte kullanici id gondermez. Kullanici kimligi token
 7. Kullanici bulunur
 8. Token gecerliyse Spring Security context'ine principal konur
 9. Controller tarafinda `@AuthenticationPrincipal` ile aktif kullaniciya erisilir
-
-### 6.4 Frontend icin pratik anlatis
-
-Frontendciye sunu direkt diyebilirsin:
-
-- `signup` ve `login` disindaki tum endpoint'ler token ister
-- token'i login cevabindan al
-- sonraki butun API isteklerinde:
 
 ```http
 Authorization: Bearer <token>
@@ -475,10 +460,6 @@ JSON response icindeki image URL alanlari yeterlidir:
 Bu URL'ler auth korumalidir ve dogrudan image stream doner.
 Mobil tarafta image loader (Coil, Glide, Picasso vb.) ile kullanilabilir.
 
-Not:
-
-- bu image endpointleri backend tarafinda vardir
-- ancak business API'yi sade tutmak icin Swagger'da gizli tutulabilir
 
 ## 9. FastAPI ile Entegrasyon Mantigi
 
@@ -524,34 +505,6 @@ Mobil uygulama tarafinda tipik kullanim sirasi su olmali:
 7. Backend gerekirse ogrenciyi `no` alanina gore otomatik olusturur
 8. Group listesi icindeki `examImageUrl` ve `answerKeyImageUrl` alanlari ile gorseller tekrar yuklenir
 
-### Frontend'e anlatilacak sade versiyon
-
-Frontendci arkadasina su sekilde anlat:
-
-"Bu backend teacher tabanli calisiyor. Once login oluyorsun ve token aliyorsun. Sonra `POST /api/classes` ile group'u ve answer key sayfalarini birlikte yolluyorsun. `GET /api/classes` sana hem group listesini hem de mevcut exam kayitlarini donuyor. Yeni kagit eklemek icin `PUT /api/classes/{groupId}` kullaniyorsun. Response icindeki `examImageUrl` ve `answerKeyImageUrl` alanlari da gorselleri tekrar yuklemek icin kullaniliyor."
-
-Bu cok kritik cunku frontend tarafinin anlamasi gereken ana fikir su:
-
-- sinif secimi frontend tarafinda yapilir
-- ogrenci secimi frontend tarafinda yapilir
-- kullanici kimligi token'dan gelir
-- backend tarafinda sahiplik kontrolu yapilir
-
-## 11. Neden Bu Veri Modeli Tercih Edildi?
-
-Bu tasarim keyfi degil, ilerideki ihtiyaclar dusunulerek secildi.
-
-### Neden `User -> Group -> Student` zinciri var?
-
-Cunku gercek dunyada:
-
-- ogretmenin birden fazla sinifi olabilir
-- bir sinifin birden fazla ogrencisi olabilir
-- kagitlar ogrenciye aittir
-- ayni group altindaki tum kagitlar ayni sinav cevap anahtarini kullanabilir
-
-Bu model olmadan "hangi kagit kime ait?" sorusu guvenilir sekilde cevaplanamaz.
-
 ### Neden `ExamSubmission` ve `ExamResult` ayri?
 
 Cunku bunlar ayni sey degil:
@@ -590,7 +543,6 @@ Mevcut yapida temel guvenlik kurallari:
 - kullanici kimligi JWT ile tasinir
 - ogretmen sadece kendi verisine erisebilir
 
-Bu sistem "frontend userId gondersin, backend ona guvensin" mantiginda degildir.
 Asil kimlik kaynagi JWT token'dir.
 
 ## 13. Hata Durumlari
@@ -606,10 +558,7 @@ Ornek durumlar:
 - `409 Conflict` -> ayni username veya ayni group/student number tekrar deneniyor
 - `502 Bad Gateway` -> FastAPI tarafinda hata
 
-Frontend acisindan bunun anlami:
 
-- her hatayi tek bir generic "bir sey bozuldu" mesaji gibi gostermek yerine
-- status code'a gore kullaniciya daha anlamli mesaj vermek mumkun
 
 ## 14. Uygulamadaki Ana Is Kurallari
 
@@ -624,21 +573,9 @@ Sistemde dikkat edilmesi gereken ana kurallar:
 7. Login olan ogretmen, sadece kendi group ve student verileriyle islem yapabilir
 8. Her submission tek bir exam result ile eslenir
 9. Her submission kullanilan cevap anahtari versiyonunu referanslar
-10. Password hashlenmeden kaydedilmez
 
 ## 15. Projenin Ozeti
 
 Bu backend'in mantigi tek cumlede su:
 
 "Ogretmen once kimligini dogrular, sonra kendi sinifini ve o sinifin cevap anahtarini tanimlar, daha sonra her ogrenciye ait kagidi yukler; backend aktif cevap anahtari ile bu kagidi FastAPI'de isler ve sonucu ilgili ogretmen-sinif-ogrenci baglaminda kalici olarak kaydeder."
-
-Eger frontend ekibi bu mantigi anlarsa entegrasyon cok rahat ilerler:
-
-- auth token'i dogru yonet
-- class sec
-- answer key yukle
-- student sec
-- paper yukle
-- sonucu listele
-
-Bu sistemin omurgasi budur.
